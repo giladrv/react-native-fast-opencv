@@ -953,13 +953,18 @@ jsi::Object FOCV_Function::invoke(jsi::Runtime& runtime, const jsi::Value* argum
       } break;
       case hashString("drawContours", 12): {
         auto img = args.asMatPtr(1);
-        auto contours = args.asMatVectorPtr(2);
         auto contourIdx = args.asNumber(3);
         auto color = args.asScalarPtr(4);
         auto thickness = args.asNumber(5);
         auto line_type = args.asNumber(6);
-        
-        cv::drawContours(*img, *contours, contourIdx, *color, thickness, line_type);
+
+        if (args.isMatVector(2)) {
+          auto contours = args.asMatVectorPtr(2);
+          cv::drawContours(*img, *contours, contourIdx, *color, thickness, line_type);
+        } else {
+          auto contours = args.asPointVectorOfVectorsPtr(2);
+          cv::drawContours(*img, *contours, contourIdx, *color, thickness, line_type);
+        }
       } break;
       case hashString("drawMarker", 10): {
         auto img = args.asMatPtr(1);
@@ -1000,11 +1005,16 @@ jsi::Object FOCV_Function::invoke(jsi::Runtime& runtime, const jsi::Value* argum
       } break;
       case hashString("fillPoly", 8): {
         auto img = args.asMatPtr(1);
-        auto pts = args.asMatVectorPtr(2);
         auto color = args.asScalarPtr(3);
         auto line_type = args.asNumber(4);
-        
-        cv::fillPoly(*img, *pts, *color, line_type);
+
+        if (args.isMatVector(2)) {
+          auto pts = args.asMatVectorPtr(2);
+          cv::fillPoly(*img, *pts, *color, line_type);
+        } else {
+          auto pts = args.asPointVectorOfVectorsPtr(2);
+          cv::fillPoly(*img, *pts, *color, line_type);
+        }
       } break;
       case hashString("line", 4): {
         auto img = args.asMatPtr(1);
@@ -1018,13 +1028,18 @@ jsi::Object FOCV_Function::invoke(jsi::Runtime& runtime, const jsi::Value* argum
       } break;
       case hashString("polylines", 9): {
         auto img = args.asMatPtr(1);
-        auto pts = args.asMatVectorPtr(2);
         auto isClosed = args.asBool(3);
         auto color = args.asScalarPtr(4);
         auto thickness = args.asNumber(5);
         auto line_type = args.asNumber(6);
-        
-        cv::polylines(*img, *pts, isClosed, *color, thickness, line_type);
+
+        if (args.isMatVector(2)) {
+          auto pts = args.asMatVectorPtr(2);
+          cv::polylines(*img, *pts, isClosed, *color, thickness, line_type);
+        } else {
+          auto pts = args.asPointVectorOfVectorsPtr(2);
+          cv::polylines(*img, *pts, isClosed, *color, thickness, line_type);
+        }
       } break;
       case hashString("rectangle", 9): {
         auto img = args.asMatPtr(1);
