@@ -1077,12 +1077,40 @@ jsi::Object FOCV_Function::invoke(jsi::Runtime& runtime, const jsi::Value* argum
       } break;
       case hashString("goodFeaturesToTrack", 19): {
         auto image = args.asMatPtr(1);
-        auto corners = args.asMatPtr(2);
         auto maxCorners = args.asNumber(3);
         auto qualityLevel = args.asNumber(4);
         auto minDistance = args.asNumber(5);
-        
-        cv::goodFeaturesToTrack(*image, *corners, maxCorners, qualityLevel, minDistance);
+        auto blockSize = count > 6 ? args.asNumber(6) : 3;
+        auto useHarrisDetector = count > 7 ? args.asBool(7) : false;
+        auto k = count > 8 ? args.asNumber(8) : 0.04;
+
+        if (args.isPoint2fVector(2)) {
+          auto corners = args.asPoint2fVectorPtr(2);
+          cv::goodFeaturesToTrack(
+            *image,
+            *corners,
+            maxCorners,
+            qualityLevel,
+            minDistance,
+            cv::noArray(),
+            blockSize,
+            useHarrisDetector,
+            k
+          );
+        } else {
+          auto corners = args.asMatPtr(2);
+          cv::goodFeaturesToTrack(
+            *image,
+            *corners,
+            maxCorners,
+            qualityLevel,
+            minDistance,
+            cv::noArray(),
+            blockSize,
+            useHarrisDetector,
+            k
+          );
+        }
       } break;
       case hashString("HoughCircles", 12): {
         auto image = args.asMatPtr(1);
@@ -1710,9 +1738,61 @@ jsi::Object FOCV_Function::invoke(jsi::Runtime& runtime, const jsi::Value* argum
         return FOCV_JsiObject::wrap(runtime, "mat", std::make_shared<cv::Mat>(H));
       } break;
 
+      case hashString("calcOpticalFlowPyrLK", 19): {
+        auto prevImg = args.asMatPtr(1);
+        auto nextImg = args.asMatPtr(2);
+        auto prevPts = args.asPoint2fVectorPtr(3);
+        auto nextPts = args.asPoint2fVectorPtr(4);
+        auto status = args.asMatPtr(5);
+        auto err = args.asMatPtr(6);
+        auto winSize = args.asSizePtr(7);
+        auto maxLevel = args.asNumber(8);
+        auto criteria = args.asTermCriteriaPtr(9);
+
+        cv::calcOpticalFlowPyrLK(
+          *prevImg,
+          *nextImg,
+          *prevPts,
+          *nextPts,
+          *status,
+          *err,
+          *winSize,
+          maxLevel,
+          *criteria
+        );
+      } break;
+
+      case hashString("estimateAffinePartial2D", 22): {
+        auto from = args.asPoint2fVectorPtr(1);
+        auto to = args.asPoint2fVectorPtr(2);
+        auto inliers = args.asMatPtr(3);
+        auto method = count > 4 ? static_cast<int>(args.asNumber(4)) : cv::RANSAC;
+        auto ransacReprojThreshold = count > 5 ? args.asNumber(5) : 3.0;
+        auto maxIters = count > 6 ? static_cast<size_t>(args.asNumber(6)) : 2000;
+        auto confidence = count > 7 ? args.asNumber(7) : 0.99;
+        auto refineIters = count > 8 ? static_cast<size_t>(args.asNumber(8)) : 10;
+
+        cv::Mat transform = cv::estimateAffinePartial2D(
+          *from,
+          *to,
+          *inliers,
+          method,
+          ransacReprojThreshold,
+          maxIters,
+          confidence,
+          refineIters
+        );
+
+        return FOCV_JsiObject::wrap(runtime, "mat", std::make_shared<cv::Mat>(transform));
+      } break;
+
       // ================== END FEATURE MATCHING FUNCTIONS ==================
     }
   } catch (cv::Exception& e) {
+    std::string message(e.what());
+    std::cout << "Fast OpenCV Invoke Error: " << message << "\n";
+    throw std::runtime_error("Fast OpenCV Error: " + message);
+  } catch (std::exception& e) {
     std::string message(e.what());
     std::cout << "Fast OpenCV Invoke Error: " << message << "\n";
     throw std::runtime_error("Fast OpenCV Error: " + message);
