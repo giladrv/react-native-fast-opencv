@@ -1494,6 +1494,17 @@ jsi::Object FOCV_Function::invoke(jsi::Runtime& runtime, const jsi::Value* argum
         }
         
       } break;
+      case hashString("fitEllipse", 10): {
+        cv::RotatedRect rect;
+
+        if (args.isMat(1)) {
+          rect = cv::fitEllipse(*args.asMatPtr(1));
+        } else {
+          rect = cv::fitEllipse(*args.asPointVectorPtr(1));
+        }
+
+        return FOCV_JsiObject::wrap(runtime, "rotated_rect", std::make_shared<cv::RotatedRect>(rect));
+      } break;
       case hashString("fitLine", 7): {
         auto points = args.asMatPtr(1);
         auto line = args.asMatPtr(2);
