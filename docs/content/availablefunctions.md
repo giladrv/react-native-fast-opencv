@@ -2370,6 +2370,25 @@ OpenCV.findContoursWithHierarchy(image: Mat,
 ): void;
 ```
 
+### fitEllipse
+
+Fits an ellipse around a set of 2D points.
+
+- points Input 2D point set, stored in a Mat or PointVector. It should contain at least 5 points.
+@returns the rotated rectangle in which the ellipse is inscribed. In this library, `x` and `y` are the ellipse center coordinates, while `width` and `height` are the full axis lengths.
+
+```js
+OpenCV.fitEllipse(points: Mat | PointVector): RotatedRect;
+```
+
+```js
+const ellipse = OpenCV.fitEllipse(contour);
+
+console.log(ellipse.x, ellipse.y); // center
+console.log(ellipse.width, ellipse.height); // full axis lengths
+console.log(ellipse.angle); // degrees
+```
+
 ### fitLine
 
 Fits a line to a 2D or 3D point set.
