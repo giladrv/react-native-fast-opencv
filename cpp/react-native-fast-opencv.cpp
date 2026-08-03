@@ -79,15 +79,25 @@ jsi::Value OpenCVPlugin::get(jsi::Runtime& runtime, const jsi::PropNameID& propN
           newArgs.push_back(jsi::Value(runtime, arguments[i]));
       }
 
-      auto result = FOCV_Function::invoke(runtime, newArgs.data(), newArgs.size());
+      try {
+        auto result = FOCV_Function::invoke(runtime, newArgs.data(), newArgs.size());
 
-      // OpenCV writes into wrapped output arguments in place, so the native
-      // size they hold may have changed — keep the GC's view up to date.
-      for (size_t i = 0; i < count; i++) {
-          FOCV_JsiObject::updateExternalMemoryPressure(runtime, arguments[i]);
+        // OpenCV writes into wrapped output arguments in place, so the native
+        // size they hold may have changed — keep the GC's view up to date.
+        for (size_t i = 0; i < count; i++) {
+            FOCV_JsiObject::updateExternalMemoryPressure(runtime, arguments[i]);
+        }
+
+        return result;
+      } catch (const jsi::JSError&) {
+        throw;
+      } catch (const std::exception& e) {
+        // Convert native failures into JS exceptions so worklet try/catch can
+        // recover. Uncaught std::exception from a host function aborts Hermes.
+        throw jsi::JSError(runtime, e.what());
+      } catch (...) {
+        throw jsi::JSError(runtime, "Fast OpenCV: unknown native error");
       }
-
-      return result;
   });
 }
 
